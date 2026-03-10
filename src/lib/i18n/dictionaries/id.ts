@@ -110,7 +110,23 @@ export const id = {
         instant: "Pemotongan Instan",
         privacy: "Privasi Terlindungi",
         speed: "Kecepatan Tinggi"
-      }
+      },
+      settings: {
+        title: "Pengaturan Lanjutan",
+        speed: "Kecepatan Video",
+        mute: "Matikan Suara",
+        rotate: "Putar & Balik",
+        normal: "Normal (1x)",
+        fast: "Cepat (1.5x)",
+        veryFast: "Sangat Cepat (2x)",
+        slow: "Lambat (0.5x)",
+        none: "Tidak Ada",
+        rotate90: "Putar 90°",
+        rotate180: "Putar 180°",
+        rotate270: "Putar 270°",
+        flipH: "Balik Horizontal",
+      },
+      downloadNow: "Unduh Video Sekarang",
     },
   },
   error: {

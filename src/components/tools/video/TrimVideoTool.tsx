@@ -4,14 +4,35 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { ToolUploader } from '@/components/tools/ToolUploader';
 import { ToolProcessing } from '@/components/tools/ToolProcessing';
 import { ToolResult } from '@/components/tools/ToolResult';
-import { trimVideoReal } from '@/lib/processing/videoProcessing';
+import { processVideo, ProcessingOptions } from '@/lib/processing/videoProcessing';
 import { getVideoDuration } from '@/lib/utils/fileHelpers';
-import { Play, Pause, Scissors, RefreshCw } from 'lucide-react';
+import { 
+  Play, 
+  Pause, 
+  Scissors, 
+  RefreshCw, 
+  Settings2, 
+  Volume2, 
+  VolumeX, 
+  Gauge, 
+  RotateCw, 
+  FlipHorizontal,
+  Download
+} from 'lucide-react';
 import type { ToolDefinition } from '@/lib/config/toolRegistry';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { Card, CardContent } from '@/components/ui/card';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 
 interface TrimVideoToolProps {
   tool: ToolDefinition;
@@ -34,9 +55,16 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [result, setResult] = useState<{ url: string; filename: string } | null>(null);
   const [processingTime, setProcessingTime] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  
+  // Advanced Settings
+  const [speed, setSpeed] = useState<number>(1);
+  const [mute, setMute] = useState<boolean>(false);
+  const [rotate, setRotate] = useState<0 | 90 | 180 | 270>(0);
+  const [flipH, setFlipH] = useState<boolean>(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -67,6 +95,11 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
     setError(null);
     setVideoPreviewUrl(null);
     setStep('upload');
+    setSpeed(1);
+    setMute(false);
+    setRotate(0);
+    setFlipH(false);
+    setProgress(0);
   };
 
   const handleStartTimeChange = (value: number[]) => {
@@ -109,17 +142,24 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
     }
   };
 
-  const handleTrim = async () => {
+  const handleProcess = async () => {
     if (!file) return;
     
     setStep('processing');
     setError(null);
+    setProgress(0);
 
-    try {
-      const processingResult = await trimVideoReal(file, {
+    const options: ProcessingOptions = {
         startTime,
         endTime,
-      });
+        speed,
+        mute,
+        rotate,
+        flipH
+    };
+
+    try {
+      const processingResult = await processVideo(file, options, (p) => setProgress(p));
       
       if (processingResult.success && processingResult.outputUrl) {
         setResult({
@@ -153,20 +193,46 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
     return (
       <ToolProcessing 
         message={t.tools.trimVideo.processing} 
-        progress={undefined}
+        progress={progress}
       />
     );
   }
 
   if (step === 'result' && result && file) {
     return (
-      <ToolResult
-        originalFile={file}
-        resultUrl={result.url}
-        resultFilename={result.filename}
-        processingTime={processingTime}
-        onReset={handleReset}
-      />
+      <div className="space-y-6 animate-in fade-in duration-500">
+          <ToolResult
+            originalFile={file}
+            resultUrl={result.url}
+            resultFilename={result.filename}
+            processingTime={processingTime}
+            onReset={handleReset}
+            previewComponent={
+                <div className="rounded-xl overflow-hidden bg-black border border-border/50 shadow-2xl relative group">
+                    <video
+                        src={result.url}
+                        className="w-full max-h-[500px] mx-auto"
+                        controls
+                        autoPlay
+                    />
+                    <div className="absolute top-4 right-4 animate-in slide-in-from-top-4 duration-1000">
+                        <Button 
+                            onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = result.url;
+                                link.download = result.filename;
+                                link.click();
+                            }}
+                            className="bg-primary hover:bg-primary/90 shadow-lg gap-2"
+                        >
+                            <Download className="h-4 w-4" />
+                            {t.tools.trimVideo.downloadNow}
+                        </Button>
+                    </div>
+                </div>
+            }
+          />
+      </div>
     );
   }
 
@@ -183,98 +249,159 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
             onTimeUpdate={handleTimeUpdate}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
+            muted={true} // Preview selection often nicer without blasting sound
           />
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             {!isPlaying && <Play className="h-16 w-16 text-white/50" />}
           </div>
+          <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center justify-between">
+              <p className="text-white font-mono text-sm tabular-nums">{formatTime(currentTime)}</p>
+              <p className="text-white/60 font-mono text-xs">{formatTime(clipDuration)}</p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          <div className="space-y-6 bg-muted/20 p-6 rounded-xl border border-border/50">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between font-medium text-sm">
-                <Label className="flex items-center gap-2">
-                  <Play className="h-4 w-4 text-green-500 fill-green-500" /> 
-                  {t.tools.trimVideo.start}: {formatTime(startTime)}
-                </Label>
-              </div>
-              <Slider
-                value={[startTime]}
-                onValueChange={handleStartTimeChange}
-                max={duration}
-                step={0.1}
-                className="py-2"
-              />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="space-y-6">
+              {/* Trimming Controls */}
+              <Card className="border-border/50 bg-muted/20">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between font-medium text-sm">
+                            <Label className="flex items-center gap-2">
+                            <Play className="h-4 w-4 text-green-500 fill-green-500" /> 
+                            {t.tools.trimVideo.start}: {formatTime(startTime)}
+                            </Label>
+                        </div>
+                        <Slider
+                            value={[startTime]}
+                            onValueChange={handleStartTimeChange}
+                            max={duration}
+                            step={0.1}
+                            className="py-2"
+                        />
+                    </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between font-medium text-sm">
-                <Label className="flex items-center gap-2">
-                  <Pause className="h-4 w-4 text-red-500 fill-red-500" />
-                  {t.tools.trimVideo.end}: {formatTime(endTime)}
-                </Label>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between font-medium text-sm">
+                            <Label className="flex items-center gap-2">
+                            <Pause className="h-4 w-4 text-red-500 fill-red-500" />
+                            {t.tools.trimVideo.end}: {formatTime(endTime)}
+                            </Label>
+                        </div>
+                        <Slider
+                            value={[endTime]}
+                            onValueChange={handleEndTimeChange}
+                            max={duration}
+                            step={0.1}
+                            className="py-2"
+                        />
+                    </div>
+                  </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="h-14 flex-1 rounded-xl" 
+                    onClick={handlePlayPause}
+                >
+                    {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 fill-current" />}
+                </Button>
+                <Button 
+                    onClick={handleProcess} 
+                    className="flex-[3] h-14 bg-primary hover:bg-primary/90 text-lg shadow-lg shadow-primary/20 rounded-xl"
+                >
+                    <Scissors className="mr-2 h-5 w-5" />
+                    {t.tools.trimVideo.trimBtn}
+                </Button>
+                <Button 
+                    variant="ghost" 
+                    onClick={handleClear} 
+                    className="h-14 px-6 rounded-xl text-muted-foreground hover:text-destructive"
+                >
+                    <RefreshCw className="h-5 w-5" />
+                </Button>
               </div>
-              <Slider
-                value={[endTime]}
-                onValueChange={handleEndTimeChange}
-                max={duration}
-                step={0.1}
-                className="py-2"
-              />
-            </div>
-            
-            <div className="pt-2 border-t border-border/50">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{t.tools.trimVideo.selected}: {formatTime(clipDuration)}</span>
-                <span>Total: {formatTime(duration)}</span>
-              </div>
-            </div>
           </div>
 
           <div className="space-y-6">
-            <div className="p-6 bg-primary/5 rounded-xl border border-primary/10 space-y-4">
-              <h4 className="font-bold flex items-center gap-2">
-                <Play className="h-4 w-4 text-primary fill-primary" />
-                {t.tools.trimVideo.playback}
-              </h4>
-              <div className="flex items-center gap-4">
-                <Button 
-                  size="lg" 
-                  className="flex-1 rounded-full h-14" 
-                  onClick={handlePlayPause}
-                >
-                  {isPlaying ? (
-                    <><Pause className="h-5 w-5 mr-2" /> {t.tools.trimVideo.pausePreview}</>
-                  ) : (
-                    <><Play className="h-5 w-5 mr-2 fill-current" /> {t.tools.trimVideo.playSelection}</>
-                  )}
-                </Button>
-                <div className="text-2xl font-mono tabular-nums bg-background px-4 py-2 rounded-lg border border-border/50">
-                   {formatTime(currentTime)}
-                </div>
-              </div>
-            </div>
+              {/* Advanced Settings */}
+              <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-6 space-y-6">
+                      <div className="flex items-center gap-2 font-bold text-primary">
+                          <Settings2 className="h-5 w-5" />
+                          {t.tools.trimVideo.settings.title}
+                      </div>
 
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleTrim} 
-                className="flex-1 h-14 bg-primary hover:bg-primary/90 text-lg shadow-lg shadow-primary/20"
-              >
-                <Scissors className="mr-2 h-5 w-5" />
-                {t.tools.trimVideo.trimBtn}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleClear} 
-                className="h-14 px-6"
-              >
-                <RefreshCw className="h-5 w-5" />
-              </Button>
-            </div>
-            
-            <p className="text-xs text-muted-foreground text-center">
-              {t.tools.trimVideo.disclaimer}
-            </p>
+                      <div className="grid grid-cols-1 gap-6">
+                          {/* Speed */}
+                          <div className="space-y-3">
+                              <Label className="text-sm font-semibold flex items-center gap-2">
+                                  <Gauge className="h-4 w-4" />
+                                  {t.tools.trimVideo.settings.speed}
+                              </Label>
+                              <Select value={speed.toString()} onValueChange={(v) => setSpeed(parseFloat(v))}>
+                                  <SelectTrigger className="bg-background">
+                                      <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      <SelectItem value="0.5">{t.tools.trimVideo.settings.slow}</SelectItem>
+                                      <SelectItem value="1">{t.tools.trimVideo.settings.normal}</SelectItem>
+                                      <SelectItem value="1.5">{t.tools.trimVideo.settings.fast}</SelectItem>
+                                      <SelectItem value="2">{t.tools.trimVideo.settings.veryFast}</SelectItem>
+                                  </SelectContent>
+                              </Select>
+                          </div>
+
+                          {/* Rotate & Flip */}
+                          <div className="space-y-3">
+                              <Label className="text-sm font-semibold flex items-center gap-2">
+                                  <RotateCw className="h-4 w-4" />
+                                  {t.tools.trimVideo.settings.rotate}
+                              </Label>
+                              <div className="flex gap-2">
+                                  <Select value={rotate.toString()} onValueChange={(v) => setRotate(parseInt(v) as any)}>
+                                      <SelectTrigger className="bg-background flex-1">
+                                          <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                          <SelectItem value="0">{t.tools.trimVideo.settings.none}</SelectItem>
+                                          <SelectItem value="90">{t.tools.trimVideo.settings.rotate90}</SelectItem>
+                                          <SelectItem value="180">{t.tools.trimVideo.settings.rotate180}</SelectItem>
+                                          <SelectItem value="270">{t.tools.trimVideo.settings.rotate270}</SelectItem>
+                                      </SelectContent>
+                                  </Select>
+                                  <Button 
+                                    variant={flipH ? "default" : "outline"} 
+                                    size="icon" 
+                                    onClick={() => setFlipH(!flipH)}
+                                    className="bg-background"
+                                    title={t.tools.trimVideo.settings.flipH}
+                                  >
+                                      <FlipHorizontal className="h-4 w-4" />
+                                  </Button>
+                              </div>
+                          </div>
+
+                          {/* Mute toggle */}
+                          <div className="flex items-center justify-between p-3 rounded-lg bg-background border border-border/50">
+                              <div className="flex items-center gap-3">
+                                  {mute ? <VolumeX className="h-5 w-5 text-muted-foreground" /> : <Volume2 className="h-5 w-5 text-primary" />}
+                                  <div className="space-y-0.5">
+                                      <Label className="text-sm font-semibold">{t.tools.trimVideo.settings.mute}</Label>
+                                  </div>
+                              </div>
+                              <Switch checked={mute} onCheckedChange={setMute} />
+                          </div>
+                      </div>
+                  </CardContent>
+              </Card>
+
+              <p className="text-xs text-muted-foreground text-center">
+                {t.tools.trimVideo.disclaimer}
+              </p>
           </div>
         </div>
       </div>
@@ -296,10 +423,10 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
         onClear={handleClear}
         label={t.tools.trimVideo.label}
       />
-      <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
-        <span>✓ {t.tools.trimVideo.features.instant}</span>
-        <span>✓ {t.tools.trimVideo.features.privacy}</span>
-        <span>✓ {t.tools.trimVideo.features.speed}</span>
+      <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5"><Play className="h-3 w-3" /> {t.tools.trimVideo.features.instant}</span>
+        <span className="flex items-center gap-1.5 font-bold text-primary">🛡️ {t.tools.trimVideo.features.privacy}</span>
+        <span className="flex items-center gap-1.5"><Scissors className="h-3 w-3" /> {t.tools.trimVideo.features.speed}</span>
       </div>
     </div>
   );

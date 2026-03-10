@@ -110,7 +110,23 @@ export const en = {
         instant: "Instant Trimming",
         privacy: "Privacy Protected",
         speed: "High Speed"
-      }
+      },
+      settings: {
+        title: "Advanced Settings",
+        speed: "Video Speed",
+        mute: "Mute Audio",
+        rotate: "Rotate & Flip",
+        normal: "Normal (1x)",
+        fast: "Fast (1.5x)",
+        veryFast: "Very Fast (2x)",
+        slow: "Slow (0.5x)",
+        none: "None",
+        rotate90: "Rotate 90°",
+        rotate180: "Rotate 180°",
+        rotate270: "Rotate 270°",
+        flipH: "Flip Horizontal",
+      },
+      downloadNow: "Download Video Now",
     },
   },
   error: {
