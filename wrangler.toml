@@ -1,0 +1,7 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "smart-editing"
+compatibility_date = "2025-03-10"
+compatibility_flags = ["nodejs_compat"]
+
+[site]
+bucket = ".vercel/output/static"
