@@ -3,7 +3,7 @@ import { createJob, updateJobStatus } from '@/lib/supabase/database';
 import { uploadInputFile, uploadOutputFile } from '@/lib/supabase/storage';
 import { delay } from '@/lib/utils/delay';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 interface ProcessRequest {
