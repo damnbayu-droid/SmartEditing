@@ -1,0 +1,17 @@
+{
+  "name": "Smart Editing",
+  "short_name": "Smart Editing",
+  "description": "Fast, free online image and video editing tools. Crop images, remove backgrounds, upscale photos, and trim videos instantly. No signup required.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#09090b",
+  "icons": [
+    {
+      "src": "/SmartEditing.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}
