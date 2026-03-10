@@ -1,57 +1,41 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Image as ImageIcon, Video, Sparkles, Zap, Shield, Globe } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ToolCard } from '@/components/tools/ToolCard';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { toolRegistry, getToolsByCategory, categoryInfo } from '@/lib/config/toolRegistry';
-import { seoConfig, faqData } from '@/lib/config/seoConfig';
-
-export const metadata: Metadata = {
-  title: seoConfig.default.title,
-  description: seoConfig.default.description,
-  keywords: seoConfig.default.keywords,
-  openGraph: {
-    title: seoConfig.default.title,
-    description: seoConfig.default.description,
-    type: 'website',
-    url: 'https://editing.biz.id',
-    siteName: 'Smart Editing',
-    images: [{ url: '/og-image.webp', width: 1200, height: 630, alt: 'Smart Editing Homepage Og Image' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: seoConfig.default.title,
-    description: seoConfig.default.description,
-  },
-};
-
-const features = [
-  {
-    icon: Zap,
-    title: 'Lightning Fast',
-    description: 'Process your files in seconds with our optimized tools.',
-  },
-  {
-    icon: Shield,
-    title: 'Secure & Private',
-    description: 'Your files are processed securely and deleted automatically.',
-  },
-  {
-    icon: Globe,
-    title: 'Works Everywhere',
-    description: 'Fully responsive tools that work on any device.',
-  },
-];
+import { getToolsByCategory, categoryInfo } from '@/lib/config/toolRegistry';
+import { faqData } from '@/lib/config/seoConfig';
 
 export default function HomePage() {
+  const { t } = useLanguage();
   const imageTools = getToolsByCategory('image');
   const videoTools = getToolsByCategory('video');
+
+  const features = [
+    {
+      icon: Zap,
+      title: t.home.features.fast.title,
+      description: t.home.features.fast.description,
+    },
+    {
+      icon: Shield,
+      title: t.home.features.secure.title,
+      description: t.home.features.secure.description,
+    },
+    {
+      icon: Globe,
+      title: t.home.features.everywhere.title,
+      description: t.home.features.everywhere.description,
+    },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -65,17 +49,16 @@ export default function HomePage() {
             <div className="text-center max-w-3xl mx-auto">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
                 <Sparkles className="h-4 w-4" aria-hidden="true" />
-                Part of SmartSystem
+                {t.common.tagline}
               </div>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-                Fast, Free Image & Video{' '}
-                <span className="text-primary">Editing Tools</span>
+                {t.home.heroTitle}{' '}
+                <span className="text-primary">{t.home.heroTitleHighlight}</span>
               </h1>
               
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Professional editing tools at your fingertips. Crop images, remove backgrounds, 
-                upscale photos, and trim videos instantly. No signup required.
+                {t.home.heroSubtitle}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -84,14 +67,14 @@ export default function HomePage() {
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
                 >
                   <ImageIcon className="h-5 w-5" aria-hidden="true" />
-                  Image Tools
+                  {t.common.imageTools}
                 </a>
                 <a
                   href="#video-tools"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-input bg-background font-medium hover:bg-accent transition-colors"
                 >
                   <Video className="h-5 w-5" aria-hidden="true" />
-                  Video Tools
+                  {t.common.videoTools}
                 </a>
               </div>
             </div>
@@ -126,8 +109,8 @@ export default function HomePage() {
                 <ImageIcon className="h-5 w-5 text-primary" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">{categoryInfo.image.name}</h2>
-                <p className="text-muted-foreground">{categoryInfo.image.description}</p>
+                <h2 className="text-2xl font-bold">{t.tools.image.name}</h2>
+                <p className="text-muted-foreground">{t.tools.image.description}</p>
               </div>
             </div>
             
@@ -147,8 +130,8 @@ export default function HomePage() {
                 <Video className="h-5 w-5 text-primary" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">{categoryInfo.video.name}</h2>
-                <p className="text-muted-foreground">{categoryInfo.video.description}</p>
+                <h2 className="text-2xl font-bold">{t.tools.video.name}</h2>
+                <p className="text-muted-foreground">{t.tools.video.description}</p>
               </div>
             </div>
             
@@ -164,9 +147,9 @@ export default function HomePage() {
         <section id="faq" className="scroll-mt-16">
           <div className="container px-4 py-16 mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
+              <h2 className="text-2xl font-bold mb-4">{t.home.faqTitle}</h2>
               <p className="text-muted-foreground">
-                Everything you need to know about Smart Editing
+                {t.home.faqSubtitle}
               </p>
             </div>
             
@@ -175,10 +158,10 @@ export default function HomePage() {
                 {faqData.map((faq, index) => (
                   <AccordionItem key={index} value={`item-${index}`}>
                     <AccordionTrigger className="text-left">
-                      {faq.question}
+                      {t.lang === 'id' ? faq.questionId || faq.question : faq.question}
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground">
-                      {faq.answer}
+                      {t.lang === 'id' ? faq.answerId || faq.answer : faq.answer}
                     </AccordionContent>
                   </AccordionItem>
                 ))}
@@ -192,18 +175,17 @@ export default function HomePage() {
           <div className="container px-4 py-16 mx-auto">
             <div className="bg-primary/5 rounded-2xl p-8 md:p-12 text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Ready to Edit?
+                {t.home.ctaTitle}
               </h2>
               <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-                Start editing your images and videos now. All tools are free to use 
-                with no signup required.
+                {t.home.ctaSubtitle}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
                   href="/image/crop"
                   className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
                 >
-                  Start Editing
+                  {t.common.startEditing}
                 </a>
               </div>
             </div>

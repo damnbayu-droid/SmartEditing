@@ -1,8 +1,14 @@
+'use client';
+
 import { AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import Link from 'next/link';
 
 export default function NotFound() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -13,17 +19,17 @@ export default function NotFound() {
           </div>
           <div>
             <h1 className="text-4xl font-bold mb-2">404</h1>
-            <h2 className="text-xl font-semibold mb-2">Page Not Found</h2>
+            <h2 className="text-xl font-semibold mb-2">{t.notFound.title}</h2>
             <p className="text-muted-foreground">
-              The page you're looking for doesn't exist or has been moved.
+              {t.notFound.description}
             </p>
           </div>
-          <a
+          <Link
             href="/"
             className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
           >
-            Go Home
-          </a>
+            {t.common.goHome}
+          </Link>
         </div>
       </main>
       <Footer />

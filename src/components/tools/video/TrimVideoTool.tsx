@@ -1,21 +1,21 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { ToolUploader } from '@/components/tools/ToolUploader';
 import { ToolProcessing } from '@/components/tools/ToolProcessing';
 import { ToolResult } from '@/components/tools/ToolResult';
-import { trimVideo } from '@/lib/processing/mockVideoProcessing';
+import { trimVideoReal } from '@/lib/processing/videoProcessing';
 import { getVideoDuration } from '@/lib/utils/fileHelpers';
+import { Play, Pause, Scissors, RefreshCw } from 'lucide-react';
 import type { ToolDefinition } from '@/lib/config/toolRegistry';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface TrimVideoToolProps {
   tool: ToolDefinition;
 }
-
-type Step = 'upload' | 'edit' | 'processing' | 'result';
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -25,6 +25,7 @@ function formatTime(seconds: number): string {
 }
 
 export function TrimVideoTool({ tool }: TrimVideoToolProps) {
+  const { t } = useLanguage();
   const [step, setStep] = useState<Step>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [duration, setDuration] = useState(0);
@@ -33,34 +34,38 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [result, setResult] = useState<{ url: string; filename: string } | null>(null);
   const [processingTime, setProcessingTime] = useState(0);
-  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const handleFileSelect = async (selectedFile: File) => {
+  const handleFileSelect = useCallback(async (selectedFile: File) => {
     setFile(selectedFile);
     setError(null);
     
     try {
+      const url = URL.createObjectURL(selectedFile);
+      setVideoPreviewUrl(url);
       const videoDuration = await getVideoDuration(selectedFile);
       setDuration(videoDuration);
       setEndTime(videoDuration);
       setStartTime(0);
       setStep('edit');
     } catch (err) {
-      setError('Failed to load video. Please try another file.');
+      setError(t.tools.trimVideo.errorLoad);
       setFile(null);
     }
-  };
+  }, [t.tools.trimVideo.errorLoad]);
 
   const handleClear = () => {
+    if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
     setFile(null);
     setDuration(0);
     setStartTime(0);
     setEndTime(0);
     setError(null);
+    setVideoPreviewUrl(null);
     setStep('upload');
   };
 
@@ -75,6 +80,9 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
   const handleEndTimeChange = (value: number[]) => {
     const newEnd = Math.max(value[0], startTime + 0.1);
     setEndTime(newEnd);
+    if (videoRef.current) {
+      videoRef.current.currentTime = newEnd;
+    }
   };
 
   const handlePlayPause = () => {
@@ -82,7 +90,9 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.currentTime = startTime;
+        if (videoRef.current.currentTime >= endTime || videoRef.current.currentTime < startTime) {
+          videoRef.current.currentTime = startTime;
+        }
         videoRef.current.play();
       }
       setIsPlaying(!isPlaying);
@@ -94,7 +104,6 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
       setCurrentTime(videoRef.current.currentTime);
       if (videoRef.current.currentTime >= endTime) {
         videoRef.current.pause();
-        videoRef.current.currentTime = startTime;
         setIsPlaying(false);
       }
     }
@@ -104,68 +113,47 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
     if (!file) return;
     
     setStep('processing');
-    setProgress(0);
-
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + Math.random() * 8;
-      });
-    }, 300);
+    setError(null);
 
     try {
-      const processingResult = await trimVideo(file, {
+      const processingResult = await trimVideoReal(file, {
         startTime,
         endTime,
       });
       
-      clearInterval(progressInterval);
-      setProgress(100);
-      
       if (processingResult.success && processingResult.outputUrl) {
         setResult({
           url: processingResult.outputUrl,
-          filename: processingResult.outputFilename || 'trimmed-video.mp4',
+          filename: processingResult.outputFilename || `trimmed-${file.name}`,
         });
         setProcessingTime(processingResult.processingTime);
         setStep('result');
       } else {
-        setError(processingResult.error || 'Processing failed');
+        setError(processingResult.error || t.tools.trimVideo.errorProcess);
         setStep('edit');
       }
     } catch (err) {
-      clearInterval(progressInterval);
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(err instanceof Error ? err.message : t.tools.trimVideo.errorUnexpected);
       setStep('edit');
     }
   };
 
   const handleReset = () => {
-    if (result?.url) {
-      URL.revokeObjectURL(result.url);
-    }
-    setResult(null);
-    setFile(null);
-    setStep('upload');
+    if (result?.url) URL.revokeObjectURL(result.url);
+    handleClear();
   };
 
   useEffect(() => {
     return () => {
-      if (isPlaying && videoRef.current) {
-        videoRef.current.pause();
-      }
+      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
     };
-  }, [isPlaying]);
+  }, [videoPreviewUrl]);
 
   if (step === 'processing') {
     return (
       <ToolProcessing 
-        message="Trimming video..." 
-        progress={Math.min(100, Math.round(progress))}
+        message={t.tools.trimVideo.processing} 
+        progress={undefined}
       />
     );
   }
@@ -182,109 +170,112 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
     );
   }
 
-  if (step === 'edit' && file) {
+  if (step === 'edit' && file && videoPreviewUrl) {
     const clipDuration = endTime - startTime;
 
     return (
-      <div className="space-y-6">
-        {/* Video Preview */}
-        <div className="rounded-lg overflow-hidden bg-black">
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="rounded-xl overflow-hidden bg-black border border-border/50 shadow-2xl relative group">
           <video
             ref={videoRef}
-            src={URL.createObjectURL(file)}
-            className="w-full max-h-96 mx-auto"
+            src={videoPreviewUrl}
+            className="w-full max-h-[500px] mx-auto"
             onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={() => {
-              if (videoRef.current) {
-                videoRef.current.currentTime = startTime;
-              }
-            }}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
           />
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            {!isPlaying && <Play className="h-16 w-16 text-white/50" />}
+          </div>
         </div>
 
-        {/* Playback Controls */}
-        <div className="flex items-center justify-center gap-4">
-          <Button variant="outline" onClick={handlePlayPause}>
-            {isPlaying ? 'Pause' : 'Play Selection'}
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </span>
-        </div>
-
-        {/* Trim Controls */}
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Start Time: {formatTime(startTime)}</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          <div className="space-y-6 bg-muted/20 p-6 rounded-xl border border-border/50">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between font-medium text-sm">
+                <Label className="flex items-center gap-2">
+                  <Play className="h-4 w-4 text-green-500 fill-green-500" /> 
+                  {t.tools.trimVideo.start}: {formatTime(startTime)}
+                </Label>
+              </div>
+              <Slider
+                value={[startTime]}
+                onValueChange={handleStartTimeChange}
+                max={duration}
+                step={0.1}
+                className="py-2"
+              />
             </div>
-            <Slider
-              value={[startTime]}
-              onValueChange={handleStartTimeChange}
-              max={duration}
-              step={0.1}
-              className="w-full"
-              aria-label="Start time"
-            />
-          </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>End Time: {formatTime(endTime)}</Label>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between font-medium text-sm">
+                <Label className="flex items-center gap-2">
+                  <Pause className="h-4 w-4 text-red-500 fill-red-500" />
+                  {t.tools.trimVideo.end}: {formatTime(endTime)}
+                </Label>
+              </div>
+              <Slider
+                value={[endTime]}
+                onValueChange={handleEndTimeChange}
+                max={duration}
+                step={0.1}
+                className="py-2"
+              />
             </div>
-            <Slider
-              value={[endTime]}
-              onValueChange={handleEndTimeChange}
-              max={duration}
-              step={0.1}
-              className="w-full"
-              aria-label="End time"
-            />
+            
+            <div className="pt-2 border-t border-border/50">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{t.tools.trimVideo.selected}: {formatTime(clipDuration)}</span>
+                <span>Total: {formatTime(duration)}</span>
+              </div>
+            </div>
           </div>
 
-          {/* Timeline visualization */}
-          <div className="relative h-8 bg-muted rounded-lg overflow-hidden">
-            {/* Full video */}
-            <div className="absolute inset-0 bg-muted-foreground/20" />
-            {/* Selected range */}
-            <div
-              className="absolute top-0 bottom-0 bg-primary/50"
-              style={{
-                left: `${(startTime / duration) * 100}%`,
-                width: `${((endTime - startTime) / duration) * 100}%`,
-              }}
-            />
-            {/* Start marker */}
-            <div
-              className="absolute top-0 bottom-0 w-0.5 bg-primary"
-              style={{ left: `${(startTime / duration) * 100}%` }}
-            />
-            {/* End marker */}
-            <div
-              className="absolute top-0 bottom-0 w-0.5 bg-primary"
-              style={{ left: `${(endTime / duration) * 100}%` }}
-            />
-            {/* Current time marker */}
-            <div
-              className="absolute top-0 bottom-0 w-0.5 bg-white"
-              style={{ left: `${(currentTime / duration) * 100}%` }}
-            />
-          </div>
+          <div className="space-y-6">
+            <div className="p-6 bg-primary/5 rounded-xl border border-primary/10 space-y-4">
+              <h4 className="font-bold flex items-center gap-2">
+                <Play className="h-4 w-4 text-primary fill-primary" />
+                {t.tools.trimVideo.playback}
+              </h4>
+              <div className="flex items-center gap-4">
+                <Button 
+                  size="lg" 
+                  className="flex-1 rounded-full h-14" 
+                  onClick={handlePlayPause}
+                >
+                  {isPlaying ? (
+                    <><Pause className="h-5 w-5 mr-2" /> {t.tools.trimVideo.pausePreview}</>
+                  ) : (
+                    <><Play className="h-5 w-5 mr-2 fill-current" /> {t.tools.trimVideo.playSelection}</>
+                  )}
+                </Button>
+                <div className="text-2xl font-mono tabular-nums bg-background px-4 py-2 rounded-lg border border-border/50">
+                   {formatTime(currentTime)}
+                </div>
+              </div>
+            </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <span>Clip duration: {formatTime(clipDuration)}</span>
-            <span>of {formatTime(duration)}</span>
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleTrim} 
+                className="flex-1 h-14 bg-primary hover:bg-primary/90 text-lg shadow-lg shadow-primary/20"
+              >
+                <Scissors className="mr-2 h-5 w-5" />
+                {t.tools.trimVideo.trimBtn}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleClear} 
+                className="h-14 px-6"
+              >
+                <RefreshCw className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <p className="text-xs text-muted-foreground text-center">
+              {t.tools.trimVideo.disclaimer}
+            </p>
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3">
-          <Button onClick={handleTrim}>
-            Trim Video
-          </Button>
-          <Button variant="outline" onClick={handleClear}>
-            Cancel
-          </Button>
         </div>
       </div>
     );
@@ -293,7 +284,7 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="p-4 bg-destructive/10 text-destructive rounded-lg">
+        <div className="p-4 bg-destructive/10 text-destructive rounded-lg border border-destructive/20 animate-in shake-1 duration-300">
           {error}
         </div>
       )}
@@ -303,11 +294,15 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
         onFileSelect={handleFileSelect}
         currentFile={file}
         onClear={handleClear}
-        label="Upload a video to trim"
+        label={t.tools.trimVideo.label}
       />
-      <p className="text-sm text-muted-foreground">
-        Select start and end points to trim your video. The trimmed video will be exported in high quality.
-      </p>
+      <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
+        <span>✓ {t.tools.trimVideo.features.instant}</span>
+        <span>✓ {t.tools.trimVideo.features.privacy}</span>
+        <span>✓ {t.tools.trimVideo.features.speed}</span>
+      </div>
     </div>
   );
 }
+
+type Step = 'upload' | 'edit' | 'processing' | 'result';

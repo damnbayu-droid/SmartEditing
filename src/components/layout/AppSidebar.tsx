@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Image as ImageIcon, Video, HelpCircle, ExternalLink } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 import {
   Sidebar,
@@ -17,19 +18,20 @@ import {
   SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 
-const mainNav = [
-  { name: 'Image Tools', href: '/#image-tools', icon: ImageIcon },
-  { name: 'Video Tools', href: '/#video-tools', icon: Video },
-  { name: 'FAQ', href: '/#faq', icon: HelpCircle },
-];
-
-const ecosystemNav = [
-  { name: 'Smart Notes', href: 'https://notes.biz.id' },
-  { name: 'Smart Convert', href: 'https://convert.biz.id' },
-];
-
 export function AppSidebar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const mainNav = [
+    { name: t.common.imageTools, href: '/#image-tools', icon: ImageIcon },
+    { name: t.common.videoTools, href: '/#video-tools', icon: Video },
+    { name: 'FAQ', href: '/#faq', icon: HelpCircle },
+  ];
+
+  const ecosystemNav = [
+    { name: 'Smart Notes', href: 'https://notes.biz.id' },
+    { name: 'Smart Convert', href: 'https://convert.biz.id' },
+  ];
 
   return (
     <Sidebar>
@@ -40,13 +42,13 @@ export function AppSidebar() {
             alt="Smart Editing" 
             className="h-8 w-8 rounded-md object-contain bg-primary/10 p-1" 
           />
-          <span>Smart Editing</span>
+          <span>{t.common.title}</span>
         </Link>
       </SidebarHeader>
       
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Tools</SidebarGroupLabel>
+          <SidebarGroupLabel>{t.common.imageTools}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNav.map((item) => (
@@ -83,7 +85,7 @@ export function AppSidebar() {
       </SidebarContent>
       
       <SidebarFooter className="border-t p-4 text-xs text-muted-foreground text-center">
-         &copy; {new Date().getFullYear()} SmartSystem
+         &copy; {new Date().getFullYear()} SmartSystem. {t.common.allRightsReserved}
       </SidebarFooter>
     </Sidebar>
   );

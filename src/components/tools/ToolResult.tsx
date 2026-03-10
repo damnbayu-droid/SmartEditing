@@ -4,6 +4,7 @@ import { Download, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { downloadFile } from '@/lib/utils/fileHelpers';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface ToolResultProps {
   originalFile: File;
@@ -22,6 +23,8 @@ export function ToolResult({
   onReset,
   previewComponent,
 }: ToolResultProps) {
+  const { lang, t } = useLanguage();
+  
   const handleDownload = () => {
     downloadFile(resultUrl, resultFilename);
   };
@@ -29,16 +32,21 @@ export function ToolResult({
   const isImage = originalFile.type.startsWith('image/');
   const isVideo = originalFile.type.startsWith('video/');
 
+  const successMessage = lang === 'id' ? 'Pemrosesan Selesai!' : 'Processing Complete!';
+  const completedInText = lang === 'id' ? 'Selesai dalam' : 'Completed in';
+  const secondsText = lang === 'id' ? 'detik' : 'seconds';
+  const originalLabel = lang === 'id' ? 'Asli' : 'Original';
+
   return (
     <Card>
       <CardContent className="p-6">
         <div className="text-center mb-6">
           <p className="text-lg font-medium text-green-600 dark:text-green-400 mb-1">
-            Processing Complete!
+            {successMessage}
           </p>
           {processingTime && (
             <p className="text-sm text-muted-foreground">
-              Completed in {(processingTime / 1000).toFixed(1)} seconds
+              {completedInText} {(processingTime / 1000).toFixed(1)} {secondsText}
             </p>
           )}
         </div>
@@ -72,7 +80,7 @@ export function ToolResult({
         <div className="bg-muted/50 rounded-lg p-4 mb-6">
           <p className="font-medium truncate mb-1">{resultFilename}</p>
           <p className="text-sm text-muted-foreground">
-            Original: {originalFile.name}
+            {originalLabel}: {originalFile.name}
           </p>
         </div>
         
@@ -84,7 +92,7 @@ export function ToolResult({
             size="lg"
           >
             <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-            Download
+            {t.common.download}
           </Button>
           {onReset && (
             <Button
@@ -94,7 +102,7 @@ export function ToolResult({
               className="flex-1"
             >
               <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
-              Process Another
+              {lang === 'id' ? 'Proses Lainnya' : 'Process Another'}
             </Button>
           )}
         </div>

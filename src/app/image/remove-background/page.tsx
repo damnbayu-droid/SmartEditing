@@ -41,8 +41,8 @@ export default function RemoveBackgroundPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <ToolLayout tool={tool}>
-        <RemoveBgTool tool={{ ...tool, icon: undefined as any }} />
+      <ToolLayout tool={{ ...tool, icon: undefined }} icon={<tool.icon className="h-8 w-8 text-primary" aria-hidden="true" />}>
+        <RemoveBgTool tool={{ ...tool, icon: undefined }} />
       </ToolLayout>
       <Footer />
     </div>

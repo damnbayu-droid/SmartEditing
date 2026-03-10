@@ -12,11 +12,14 @@ export type ToolCategory = 'image' | 'video';
 export interface ToolDefinition {
   id: string;
   name: string;
+  nameId?: string;
   description: string;
+  descriptionId?: string;
   shortDescription: string;
+  shortDescriptionId?: string;
   category: ToolCategory;
   route: string;
-  icon: typeof Crop;
+  icon: any; // Lucide icon component
   features: string[];
   seoTitle: string;
   seoDescription: string;
@@ -29,8 +32,11 @@ export const toolRegistry: ToolDefinition[] = [
   {
     id: 'image-crop',
     name: 'Crop Image',
+    nameId: 'Potong Gambar',
     description: 'Easily crop and resize your images to any dimension. Perfect for social media, websites, and print materials. Free online image cropping tool.',
+    descriptionId: 'Potong dan ubah ukuran gambar Anda ke dimensi apa pun dengan mudah. Sempurna untuk media sosial, situs web, dan bahan cetak.',
     shortDescription: 'Crop and resize images to any dimension',
+    shortDescriptionId: 'Potong dan ubah ukuran gambar ke dimensi apa pun',
     category: 'image',
     route: '/image/crop',
     icon: Crop,
@@ -50,8 +56,11 @@ export const toolRegistry: ToolDefinition[] = [
   {
     id: 'image-remove-background',
     name: 'Remove Background',
+    nameId: 'Hapus Latar Belakang',
     description: 'Remove background from any image instantly with AI-powered precision. Perfect for product photos, portraits, and graphic design. Free online background remover.',
+    descriptionId: 'Hapus latar belakang dari gambar apa pun secara instan dengan presisi bertenaga AI. Sempurna untuk foto produk, potret, dan desain grafis.',
     shortDescription: 'Remove image backgrounds with AI precision',
+    shortDescriptionId: 'Hapus latar belakang gambar dengan presisi AI',
     category: 'image',
     route: '/image/remove-background',
     icon: Eraser,
@@ -71,8 +80,11 @@ export const toolRegistry: ToolDefinition[] = [
   {
     id: 'image-upscale',
     name: 'Upscale Image',
+    nameId: 'Tingkatkan Resolusi',
     description: 'Enhance and upscale your images up to 4x resolution using AI technology. Perfect for enlarging photos without losing quality. Free online image upscaler.',
+    descriptionId: 'Tingkatkan resolusi gambar Anda hingga 4x menggunakan teknologi AI. Sempurna untuk memperbesar foto tanpa kehilangan kualitas.',
     shortDescription: 'Enhance image resolution with AI upscaling',
+    shortDescriptionId: 'Tingkatkan resolusi gambar dengan AI upscaling',
     category: 'image',
     route: '/image/upscale',
     icon: Maximize2,
@@ -92,8 +104,11 @@ export const toolRegistry: ToolDefinition[] = [
   {
     id: 'video-trim',
     name: 'Trim Video',
+    nameId: 'Potong Video',
     description: 'Trim and cut your videos with precision. Remove unwanted parts, create clips, and export in high quality. Free online video trimmer.',
+    descriptionId: 'Potong video Anda dengan presisi. Hapus bagian yang tidak diinginkan, buat klip, dan ekspor dalam kualitas tinggi.',
     shortDescription: 'Trim and cut videos with precision',
+    shortDescriptionId: 'Potong video dengan presisi',
     category: 'video',
     route: '/video/trim',
     icon: Scissors,

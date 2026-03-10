@@ -3,6 +3,9 @@
 import { useEffect } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -10,31 +13,33 @@ interface ErrorProps {
 }
 
 export default function Error({ error, reset }: ErrorProps) {
+  const { t } = useLanguage();
+
   useEffect(() => {
     console.error('Error:', error);
   }, [error]);
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="h-16 border-b bg-background/95" />
+      <Header />
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="flex flex-col items-center gap-6 text-center max-w-md">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
             <AlertTriangle className="h-8 w-8 text-destructive" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
+            <h1 className="text-2xl font-bold mb-2">{t.error.title}</h1>
             <p className="text-muted-foreground">
-              An unexpected error occurred. Please try again.
+              {t.error.description}
             </p>
           </div>
           <div className="flex gap-3">
             <Button onClick={reset} variant="default">
               <RefreshCw className="h-4 w-4 mr-2" />
-              Try Again
+              {t.common.tryAgain}
             </Button>
             <Button onClick={() => window.location.href = '/'} variant="outline">
-              Go Home
+              {t.common.goHome}
             </Button>
           </div>
           {process.env.NODE_ENV === 'development' && (
@@ -44,6 +49,7 @@ export default function Error({ error, reset }: ErrorProps) {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

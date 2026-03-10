@@ -43,27 +43,39 @@ export const seoConfig = {
 export const faqData = [
   {
     question: 'Is Smart Editing completely free to use?',
+    questionId: 'Apakah Smart Editing sepenuhnya gratis untuk digunakan?',
     answer: 'Yes! All our image and video editing tools are completely free to use. There are no hidden fees, no watermarks, and no signup required.',
+    answerId: 'Ya! Semua alat pengeditan gambar dan video kami sepenuhnya gratis untuk digunakan. Tidak ada biaya tersembunyi, tanpa watermark, dan tidak perlu mendaftar.',
   },
   {
     question: 'What file formats are supported?',
+    questionId: 'Format file apa saja yang didukung?',
     answer: 'For images, we support JPEG, PNG, WebP, and GIF formats. For videos, we support MP4, WebM, MOV, and AVI formats.',
+    answerId: 'Untuk gambar, kami mendukung format JPEG, PNG, WebP, dan GIF. Untuk video, kami mendukung format MP4, WebM, MOV, dan AVI.',
   },
   {
     question: 'Are my files secure and private?',
+    questionId: 'Apakah file saya aman dan privat?',
     answer: 'Absolutely. All files are processed securely and automatically deleted after processing. We never store or share your files.',
+    answerId: 'Tentu saja. Semua file diproses dengan aman dan dihapus secara otomatis setelah pemrosesan. Kami tidak pernah menyimpan atau membagikan file Anda.',
   },
   {
     question: 'How fast is the processing?',
+    questionId: 'Seberapa cepat prosesnya?',
     answer: 'Most image operations are instant or take just a few seconds. Video processing time depends on file size but typically completes within 15-30 seconds.',
+    answerId: 'Sebagian besar operasi gambar instan atau hanya butuh beberapa detik. Waktu pemrosesan video tergantung pada ukuran file tetapi biasanya selesai dalam 15-30 detik.',
   },
   {
     question: 'Can I use these tools on mobile devices?',
+    questionId: 'Bisakah saya menggunakan alat ini di perangkat seluler?',
     answer: 'Yes! Smart Editing is fully responsive and works great on smartphones, tablets, and desktop computers.',
+    answerId: 'Ya! Smart Editing sepenuhnya responsif dan berfungsi dengan baik di smartphone, tablet, dan komputer desktop.',
   },
   {
     question: 'Do I need to create an account?',
+    questionId: 'Apakah saya perlu membuat akun?',
     answer: 'No account needed! Just upload your file and start editing immediately. We believe in making tools accessible to everyone.',
+    answerId: 'Tidak perlu akun! Cukup unggah file Anda dan mulai mengedit segera. Kami percaya dalam membuat alat yang mudah diakses oleh siapa saja.',
   },
 ];
 

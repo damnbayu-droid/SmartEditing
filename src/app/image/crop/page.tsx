@@ -41,8 +41,8 @@ export default function CropImagePage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <ToolLayout tool={tool}>
-        <CropTool tool={{ ...tool, icon: undefined as any }} />
+      <ToolLayout tool={{ ...tool, icon: undefined }} icon={<tool.icon className="h-8 w-8 text-primary" aria-hidden="true" />}>
+        <CropTool tool={{ ...tool, icon: undefined }} />
       </ToolLayout>
       <Footer />
     </div>

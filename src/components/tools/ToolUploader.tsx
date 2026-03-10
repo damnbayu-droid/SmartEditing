@@ -5,6 +5,7 @@ import { Upload, X, FileIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatFileSize } from '@/lib/utils/fileHelpers';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface ToolUploaderProps {
   acceptedTypes: string[];
@@ -21,21 +22,30 @@ export function ToolUploader({
   onFileSelect,
   currentFile,
   onClear,
-  label = 'Upload your file',
+  label: customLabel,
 }: ToolUploaderProps) {
+  const { lang } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const defaultLabel = lang === 'id' ? 'Unggah file Anda' : 'Upload your file';
+  const label = customLabel || defaultLabel;
+
   const validateFile = useCallback((file: File): string | null => {
     if (!acceptedTypes.includes(file.type)) {
-      return `Invalid file type. Accepted: ${acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')}`;
+      const types = acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ');
+      return lang === 'id' 
+        ? `Tipe file tidak valid. Yang diterima: ${types}`
+        : `Invalid file type. Accepted: ${types}`;
     }
     if (file.size > maxSize * 1024 * 1024) {
-      return `File too large. Maximum size: ${maxSize} MB`;
+      return lang === 'id'
+        ? `File terlalu besar. Ukuran maksimal: ${maxSize} MB`
+        : `File too large. Maximum size: ${maxSize} MB`;
     }
     return null;
-  }, [acceptedTypes, maxSize]);
+  }, [acceptedTypes, maxSize, lang]);
 
   const handleFile = useCallback((file: File) => {
     const validationError = validateFile(file);
@@ -106,7 +116,7 @@ export function ToolUploader({
           <Upload className="h-10 w-10 text-muted-foreground mb-4" aria-hidden="true" />
           <p className="mb-2 text-sm font-medium">{label}</p>
           <p className="text-xs text-muted-foreground text-center">
-            Drag and drop or click to upload
+            {lang === 'id' ? 'Tarik dan lepas atau klik untuk unggah' : 'Drag and drop or click to upload'}
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             Max {maxSize} MB • {acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')}
@@ -127,7 +137,7 @@ export function ToolUploader({
             size="icon"
             className="absolute top-2 right-2 h-8 w-8"
             onClick={handleClear}
-            aria-label="Remove file"
+            aria-label={lang === 'id' ? 'Hapus file' : 'Remove file'}
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </Button>

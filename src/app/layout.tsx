@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -88,15 +89,17 @@ export default function RootLayout({
           defaultTheme="light"
           enableSystem={false}
         >
-          <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-              <div className="flex-1 flex flex-col min-h-screen">
-                {children}
-              </div>
-            </SidebarInset>
-          </SidebarProvider>
-          <Toaster />
+          <LanguageProvider>
+            <SidebarProvider>
+              <AppSidebar />
+              <SidebarInset>
+                <div className="flex-1 flex flex-col min-h-screen">
+                  {children}
+                </div>
+              </SidebarInset>
+            </SidebarProvider>
+            <Toaster />
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>
