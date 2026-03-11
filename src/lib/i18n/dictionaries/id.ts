@@ -127,6 +127,8 @@ export const id = {
         flipH: "Balik Horizontal",
       },
       downloadNow: "Unduh Video Sekarang",
+      successTitle: "Video Berhasil Diproses!",
+      successDesc: "Video Anda siap untuk diunduh.",
     },
   },
   error: {

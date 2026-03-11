@@ -127,6 +127,8 @@ export const en = {
         flipH: "Flip Horizontal",
       },
       downloadNow: "Download Video Now",
+      successTitle: "Video Processed Successfully!",
+      successDesc: "Your video is ready for download.",
     },
   },
   error: {

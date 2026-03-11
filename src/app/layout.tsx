@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -99,6 +100,7 @@ export default function RootLayout({
               </SidebarInset>
             </SidebarProvider>
             <Toaster />
+            <SonnerToaster position="top-center" richColors />
           </LanguageProvider>
         </ThemeProvider>
       </body>

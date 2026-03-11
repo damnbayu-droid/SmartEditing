@@ -26,6 +26,7 @@ import {
 import type { ToolDefinition } from '@/lib/config/toolRegistry';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
+import { toast } from 'sonner';
 import { 
   Select, 
   SelectContent, 
@@ -168,6 +169,10 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
         });
         setProcessingTime(processingResult.processingTime);
         setStep('result');
+        
+        toast.success(t.tools.trimVideo.successTitle, {
+          description: t.tools.trimVideo.successDesc,
+        });
       } else {
         setError(processingResult.error || t.tools.trimVideo.errorProcess);
         setStep('edit');
@@ -249,7 +254,6 @@ export function TrimVideoTool({ tool }: TrimVideoToolProps) {
             onTimeUpdate={handleTimeUpdate}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
-            muted={true} // Preview selection often nicer without blasting sound
           />
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             {!isPlaying && <Play className="h-16 w-16 text-white/50" />}
